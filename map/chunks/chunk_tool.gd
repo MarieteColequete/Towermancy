@@ -1,7 +1,8 @@
 @tool
 extends Node
 
-@export var chunk_size: Vector2i = Vector2i(15, 15)
+var chunk_size: Vector2i = Constants.CHUNK_SIZE
+
 
 func _notification(what):
 	if Engine.is_editor_hint() and what == NOTIFICATION_EDITOR_POST_SAVE:
