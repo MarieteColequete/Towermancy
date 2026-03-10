@@ -50,29 +50,28 @@ func draw_connections(directions: Array[Direction]) -> void:
 		_draw_path_from_center(dir)
 	chunk_tool.auto_tile()
 
-
 func _draw_path_from_center(dir: Direction) -> void:
 	var middle := Vector2i(chunk_size.x / 2, chunk_size.y / 2)
 	var pos := middle
 	
 	match dir:
 		Direction.NORTH:
-			while pos.y > 0:
+			while pos.y >= 0:
 				path_tilemap.set_cells_terrain_connect([pos], 0, 1, false)
 				pos.y -= 1
 	
 		Direction.SOUTH:
-			while pos.y < chunk_size.y - 1:
+			while pos.y <= chunk_size.y - 1:
 				path_tilemap.set_cells_terrain_connect([pos], 0, 1, false)
 				pos.y += 1
 	
 		Direction.WEST:
-			while pos.x > 0:
+			while pos.x >= 0:
 				path_tilemap.set_cells_terrain_connect([pos], 0, 1, false)
 				pos.x -= 1
 	
 		Direction.EAST:
-			while pos.x < chunk_size.x - 1:
+			while pos.x <= chunk_size.x - 1:
 				path_tilemap.set_cells_terrain_connect([pos], 0, 1, false)
 				pos.x += 1
 

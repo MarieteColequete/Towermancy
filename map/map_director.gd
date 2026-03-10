@@ -7,7 +7,9 @@ var cell_size: int = Constants.CELL_SIZE
 
 func _ready() -> void:
 	spawn_chunk(Vector2i(0,0))
-	chunks[Vector2i(0, 0)].draw_connections([Chunk.Direction.NORTH, Chunk.Direction.SOUTH])
+	chunks[Vector2i(0, 0)].draw_connections([Chunk.Direction.NORTH])
+	spawn_chunk(Vector2i(0,-1))
+	chunks[Vector2i(0, -1)].draw_connections([Chunk.Direction.WEST, Chunk.Direction.SOUTH])
 
 func spawn_chunk(chunk_coords: Vector2i):
 	if chunks.has(chunk_coords):

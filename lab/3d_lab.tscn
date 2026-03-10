@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://bot5jk0lwkml0"]
+
+[ext_resource type="PackedScene" uid="uid://b7nmxechbc07m" path="res://map/mountain/mountain_algorithm.tscn" id="1_5e6sv"]
+[ext_resource type="Script" uid="uid://dmimnrh00dinj" path="res://lab/3d_lab.gd" id="1_l2yst"]
+[ext_resource type="PackedScene" uid="uid://b6f13r2jfcxsu" path="res://lab/block.tscn" id="2_rt84s"]
+
+[node name="Lab" type="Node3D" node_paths=PackedStringArray("algorithm", "blocks")]
+script = ExtResource("1_l2yst")
+r = 100
+height_scale = 0.1
+algorithm = NodePath("Algorithm")
+blocks = NodePath("Blocks")
+block = ExtResource("2_rt84s")
+
+[node name="Algorithm" parent="." instance=ExtResource("1_5e6sv")]
+
+[node name="Blocks" type="Node" parent="."]

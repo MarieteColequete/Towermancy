@@ -1,0 +1,17 @@
+[gd_scene load_steps=4 format=3 uid="uid://c26pxfw627bpn"]
+
+[ext_resource type="Script" uid="uid://2u4vhmh1d08s" path="res://lab/2d_lab.gd" id="1_7xpag"]
+[ext_resource type="PackedScene" uid="uid://b7nmxechbc07m" path="res://map/mountain/mountain_algorithm.tscn" id="2_8g4r1"]
+[ext_resource type="Script" uid="uid://bu4bgwvurmmcd" path="res://lab/camera_2d_lab.gd" id="3_ymhqg"]
+
+[node name="Lab" type="Node2D" node_paths=PackedStringArray("algorithm", "tempo")]
+script = ExtResource("1_7xpag")
+algorithm = NodePath("Algorithm")
+tempo = NodePath("Lab_tempo")
+
+[node name="Algorithm" parent="." instance=ExtResource("2_8g4r1")]
+
+[node name="Lab_tempo" type="Timer" parent="."]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("3_ymhqg")

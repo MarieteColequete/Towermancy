@@ -1,0 +1,10 @@
+[gd_scene load_steps=3 format=3 uid="uid://b7nmxechbc07m"]
+
+[ext_resource type="Script" uid="uid://bdsfhwuya4ayu" path="res://map/mountain/mountain_algorithm.gd" id="1_uwujm"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_uwujm"]
+seed = 37536
+
+[node name="Algorithm" type="Node"]
+script = ExtResource("1_uwujm")
+noise = SubResource("FastNoiseLite_uwujm")

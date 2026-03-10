@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cry0p2qtj4wlm"]
 
-[ext_resource type="Script" uid="uid://beg1chy0g4lep" path="res://map/map.gd" id="1_hgrid"]
+[ext_resource type="Script" uid="uid://beg1chy0g4lep" path="res://map/map_director.gd" id="1_hgrid"]
 
 [node name="World" type="Node2D"]
 
