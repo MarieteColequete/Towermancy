@@ -14,6 +14,8 @@ func _ready() -> void:
 	starting_chunk_spawn()
 	tempo.start()
 	expand()
+	expand()
+	expand()
 
 func expand() -> void:
 	var coords: Vector2i
@@ -27,31 +29,50 @@ func expand() -> void:
 	spawn_chunk(coords)
 	chunks[coords].draw_connections([ghost_chunks[coords]])
 	
-	var expand_directions := [
+	var expand_directions: Array[Chunk.Direction] = [
 		Chunk.Direction.NORTH,
-		Chunk.Direction.SOUTH,
+		Chunk.Direction.SOUTH,	
 		Chunk.Direction.EAST,
 		Chunk.Direction.WEST
 	]
 	expand_directions.erase(ghost_chunks[coords])
 	expand_directions = decide_path(expand_directions, coords)
-	chunks[coords].draw_connections(expand_directions)
 	
+	var final: Chunk.Direction
+	if expand_directions.size() == 0: final = expand_directions[0]
+	else: final = expand_directions.get(randi() % expand_directions.size())
+	
+	add_connection(coords, final)
+	
+	ghost_chunks.erase(coords)
 
-func decide_path(directions: Array[Chunk.Direction], coords: Vector2i):
+func decide_path(directions: Array[Chunk.Direction], coords: Vector2i) -> Array[Chunk.Direction]:
 	var h = algorithm.get_height(coords)
-	var n:Array[Vector2i]
-	var d: Array[Chunk.Direction]
+	var d: Array[Chunk.Direction] = directions
 	for dir in directions:
+		var current: Vector2i
 		match dir:
 			Chunk.Direction.NORTH:
-				pass
+				current = Vector2i(coords.x, coords.y - 1)
+				if algorithm.get_height(current)> h: d.erase(dir)
+				elif ghost_chunks.has(current): d.erase(dir)
+				elif chunks.has(current): d.erase(dir)
 			Chunk.Direction.SOUTH:
-				pass
+				current = Vector2i(coords.x, coords.y + 1)
+				if algorithm.get_height(current)> h: d.erase(dir)
+				elif ghost_chunks.has(current): d.erase(dir)
+				elif chunks.has(current): d.erase(dir)
 			Chunk.Direction.EAST:
-				pass
+				current = Vector2i(coords.x + 1, coords.y)
+				if algorithm.get_height(current)> h: d.erase(dir)
+				elif ghost_chunks.has(current): d.erase(dir)
+				elif chunks.has(current): d.erase(dir)
 			Chunk.Direction.WEST:
-				pass
+				current = Vector2i(coords.x - 1, coords.y)
+				if algorithm.get_height(current)> h: d.erase(dir)
+				elif ghost_chunks.has(current): d.erase(dir)
+				elif chunks.has(current): d.erase(dir)
+	return d
 
 func spawn_chunk(chunk_coords: Vector2i):
 	if chunks.has(chunk_coords):
@@ -77,3 +98,22 @@ func starting_chunk_spawn() -> void:
 	spawn_chunk(Vector2i(0,0))
 	chunks[Vector2i(0, 0)].draw_connections([Chunk.Direction.NORTH])
 	ghost_chunks[Vector2i(0, -1)] = Chunk.Direction.SOUTH
+
+func add_connection(coords: Vector2i, direction: Chunk.Direction) -> void:
+	match direction:
+			Chunk.Direction.NORTH:
+				var current = Vector2i(coords.x, coords.y - 1)
+				chunks[coords].draw_connections([Chunk.Direction.SOUTH])
+				ghost_chunks[current] = Chunk.Direction.SOUTH
+			Chunk.Direction.SOUTH:
+				var current = Vector2i(coords.x, coords.y + 1)
+				chunks[coords].draw_connections([Chunk.Direction.NORTH])
+				ghost_chunks[current] = Chunk.Direction.NORTH
+			Chunk.Direction.EAST:
+				var current = Vector2i(coords.x + 1, coords.y)
+				chunks[coords].draw_connections([Chunk.Direction.WEST])
+				ghost_chunks[current] = Chunk.Direction.WEST
+			Chunk.Direction.WEST:
+				var current = Vector2i(coords.x - 1, coords.y)
+				chunks[coords].draw_connections([Chunk.Direction.EAST])
+				ghost_chunks[current] = Chunk.Direction.EAST
