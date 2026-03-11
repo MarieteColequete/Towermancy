@@ -7,7 +7,7 @@
 [node name="Lab" type="Node3D" node_paths=PackedStringArray("algorithm", "blocks")]
 script = ExtResource("1_l2yst")
 r = 100
-height_scale = 0.1
+height_scale = 0.02
 algorithm = NodePath("Algorithm")
 blocks = NodePath("Blocks")
 block = ExtResource("2_rt84s")

@@ -30,7 +30,7 @@ func run_test():
 			blocks.add_child(block_instance)
 			var pos = Vector3(
 				coords.x,
-				algorithm.get_height(0, coords) * height_scale - 50,
+				algorithm.get_height(coords) * height_scale - 50,
 				coords.y
 			)
 			block_instance.position = pos
@@ -41,11 +41,11 @@ func run_test():
 			var rel_x: float = float(coords.x + r) / float(2 * r)
 			var rel_z: float = float(coords.y + r) / float(2 * r)
 			
-			var slope = algorithm.get_slope(0, coords)
+			var slope = algorithm.get_slope(coords)
 			var slope_vis = clamp(slope / 4.0, 0.0, 1.0)
 			
 			var can_go_down = 0.0
-			if algorithm.can_go_down(0, coords) == true: can_go_down = 1.0
+			if algorithm.can_go_down(coords) == true: can_go_down = 1.0
 			
 			mat.albedo_color = Color(can_go_down, can_go_down, can_go_down)
 

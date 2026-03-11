@@ -12,6 +12,7 @@ tempo = NodePath("Lab_tempo")
 [node name="Algorithm" parent="." instance=ExtResource("2_8g4r1")]
 
 [node name="Lab_tempo" type="Timer" parent="."]
+wait_time = 0.2
 
 [node name="Camera2D" type="Camera2D" parent="."]
 script = ExtResource("3_ymhqg")
