@@ -1,9 +1,9 @@
 extends Camera2D
 
 const SPEED: float = 4000
-const ZOOM_STEP: float = 0.1
-const MIN_ZOOM: float = 0.03
-const MAX_ZOOM: float = 4.0
+const ZOOM_STEP: float = 0.01
+const MIN_ZOOM: float = 0.01
+const MAX_ZOOM: float = 1	
 
 
 func _process(delta: float) -> void:
@@ -14,6 +14,8 @@ func _process(delta: float) -> void:
 	
 	if input != Vector2.ZERO:
 		position += input * SPEED * delta * (1 / zoom.length())
+	
+	position = position.round()
 
 
 func _input(event: InputEvent) -> void:
