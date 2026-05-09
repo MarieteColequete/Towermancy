@@ -15,5 +15,6 @@ tempo = NodePath("Lab_tempo")
 wait_time = 0.2
 
 [node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(0.25, 0.25)
 position_smoothing_enabled = true
 script = ExtResource("3_ymhqg")

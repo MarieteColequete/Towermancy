@@ -2,6 +2,14 @@ extends Node2D
 class_name Chunk
 
 # --------------------------------------------------
+# TODO
+# --------------------------------------------------
+# 
+# - Unify tilemaps into a tilemap in the map scene instead of chunks
+# - Get multiple path patterns working (within a chunk scale)
+# 
+
+# --------------------------------------------------
 # Exports / Constants
 # --------------------------------------------------
 @export var chunk_size: Vector2i = Constants.CHUNK_SIZE
@@ -10,9 +18,10 @@ class_name Chunk
 # --------------------------------------------------
 # Nodes
 # --------------------------------------------------
-@onready var world_tilemap: TileMapLayer = $WorldTiles
-@onready var path_tilemap: TileMapLayer = $PathTiles
+@onready var world_tilemap: TileMapLayer = $WorldTiles # Deprecate this
+@onready var path_tilemap: TileMapLayer = $PathTiles # Deprecate this
 @onready var chunk_tool: Node = $ChunkTool
+#@onready var tilemap: TileMapLayer = $MapDirector/Cells # Use this
 
 # --------------------------------------------------
 # Directions

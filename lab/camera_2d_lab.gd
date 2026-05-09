@@ -8,8 +8,8 @@ const MAX_ZOOM: float = 1
 
 func _process(delta: float) -> void:
 	var input := Vector2(
-		Input.get_axis("ui_left", "ui_right"),
-		Input.get_axis("ui_up", "ui_down")
+		Input.get_axis("left", "right"),
+		Input.get_axis("up", "down")
 	)
 	
 	if input != Vector2.ZERO:

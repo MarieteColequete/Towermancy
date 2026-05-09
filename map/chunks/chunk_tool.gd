@@ -1,4 +1,4 @@
-@tool
+#@tool TODO
 extends Node
 
 var chunk_size: Vector2i = Constants.CHUNK_SIZE
