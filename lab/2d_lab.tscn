@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://2u4vhmh1d08s" path="res://lab/2d_lab.gd" id="1_7xpag"]
 [ext_resource type="PackedScene" uid="uid://b7nmxechbc07m" path="res://map/mountain/mountain_algorithm.tscn" id="2_8g4r1"]
-[ext_resource type="Script" uid="uid://bu4bgwvurmmcd" path="res://lab/camera_2d_lab.gd" id="3_ymhqg"]
+[ext_resource type="PackedScene" uid="uid://bm35v7fddibd" path="res://lab/camera_2d.tscn" id="3_ymhqg"]
 
 [node name="Lab" type="Node2D" node_paths=PackedStringArray("algorithm", "tempo")]
 script = ExtResource("1_7xpag")
@@ -14,7 +14,4 @@ tempo = NodePath("Lab_tempo")
 [node name="Lab_tempo" type="Timer" parent="."]
 wait_time = 0.2
 
-[node name="Camera2D" type="Camera2D" parent="."]
-zoom = Vector2(0.25, 0.25)
-position_smoothing_enabled = true
-script = ExtResource("3_ymhqg")
+[node name="Camera2D" parent="." instance=ExtResource("3_ymhqg")]

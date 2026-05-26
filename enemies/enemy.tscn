@@ -1,0 +1,19 @@
+[gd_scene load_steps=9 format=3 uid="uid://qhtnspy1q0dc"]
+
+[ext_resource type="Script" uid="uid://8ivuxx2iecg0" path="res://enemies/enemy.gd" id="1_fw1ev"]
+[ext_resource type="Texture2D" uid="uid://dvgv7ue2xqxq6" path="res://assets/enemies/rogue.svg" id="2_4w5fm"]
+[ext_resource type="Texture2D" uid="uid://bknpam717mjsf" path="res://icon.svg" id="2_7frlh"]
+[ext_resource type="Texture2D" uid="uid://cji8116pbdvud" path="res://assets/enemies/normie.svg" id="3_uba7a"]
+[ext_resource type="Texture2D" uid="uid://bg1jvcvg40fsu" path="res://assets/enemies/warrior.svg" id="4_28xqf"]
+[ext_resource type="Texture2D" uid="uid://hx2m8pripjgu" path="res://assets/enemies/wizard.svg" id="5_g67el"]
+[ext_resource type="Texture2D" uid="uid://bawclsg5ixmn0" path="res://assets/enemies/boss.svg" id="6_ccbdt"]
+[ext_resource type="Texture2D" uid="uid://bacxwdmnb752g" path="res://assets/enemies/uberboss.svg" id="7_mgey2"]
+
+[node name="Enemy" type="Node2D"]
+script = ExtResource("1_fw1ev")
+icons = Array[Texture2D]([ExtResource("2_4w5fm"), ExtResource("3_uba7a"), ExtResource("4_28xqf"), ExtResource("5_g67el"), ExtResource("6_ccbdt"), ExtResource("7_mgey2")])
+
+[node name="Icon" type="Sprite2D" parent="."]
+z_index = 90
+position = Vector2(-1, -4)
+texture = ExtResource("2_7frlh")

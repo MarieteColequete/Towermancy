@@ -394,7 +394,7 @@ texture = ExtResource("1_15wxe")
 2:20/0 = 0
 
 [resource]
-tile_size = Vector2i(800, 800)
+tile_size = Vector2i(2000, 2000)
 terrain_set_0/mode = 0
 terrain_set_0/terrain_0/name = "World"
 terrain_set_0/terrain_0/color = Color(1.0348111e-06, 0.54363334, 0.2384803, 1)
