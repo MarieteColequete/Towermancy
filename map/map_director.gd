@@ -3,6 +3,7 @@ extends Node2D
 @export var world: WorldData
 @export var cells: TileMapLayer
 @export var wave_director: WaveDirector
+@export var game_ui: CanvasLayer
 
 const TERRAIN_PATH: int = 1
 const TERRAIN_EMPTY: int = 0
@@ -16,11 +17,8 @@ func _ready() -> void:
 	world.setup()
 	_generate_map()
 	_sync_spawn_points()
-	wave_director.start_wave(10, true)
-	$GameUI.notify("TEST 1")
-	$GameUI.notify("TEST 2")
-	$GameUI.notify("TEST 3")
-	$GameUI.notify("TEST 4")
+	game_ui.initialize()
+	wave_director.start_wave(30, false)
 
 
 # -------------------------
@@ -78,8 +76,18 @@ func _sync_spawn_points() -> void:
 	var data: Array[Dictionary] = []
 	for entry in world.get_spawn_point_data():
 		var coords: Vector2i = entry["coords"]
+
+		# Ghosts are not rendered: spawn enemies at the parent chunk center instead
+		var spawn_pos: Vector2
+		if world.is_ghost(coords):
+			var parent_dir: int = world.get_parent_dir(coords)
+			var parent_coords: Vector2i = coords + Constants.direction_to_vector(parent_dir)
+			spawn_pos = chunk_center_world(parent_coords)
+		else:
+			spawn_pos = chunk_center_world(coords)
+
 		data.append({
-			"spawn_position": chunk_center_world(coords),
+			"spawn_position": spawn_pos,
 			"chunk_coords": coords,
 			"weight": entry["weight"]
 		})

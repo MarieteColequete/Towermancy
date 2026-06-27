@@ -11,8 +11,8 @@ extends Node
 # e.g. 0.5 means +50% HP at wave 10, +100% at wave 20, etc.
 @export var hp_per_ten_waves: float = 0.5
 
-# Seconds between each spawn tick (one enemy per active spawn point per tick).
-@export var spawn_interval: float = 0.5
+# Base seconds between spawn ticks at wave 0. Scales up to 3x by wave 200.
+@export var default_spawn_interval: float = 0.5
 
 @export var player_health: Player
 
@@ -22,6 +22,7 @@ extends Node
 
 # Emitted whenever the enemy count changes (spawned or died/reached base).
 signal enemies_remaining_changed(count: int)
+signal wave_started(wave_number: int)
 
 # -------------------------
 # Enemy unlock thresholds (wave number)
@@ -61,6 +62,9 @@ var _spawn_timer: Timer
 # Whether a wave is currently running
 var _wave_active: bool = false
 
+# Number of spawn points with non-empty queues at wave start (used for interval calc)
+var _active_spawn_count: int = 1
+
 # Count of enemies still alive or queued this wave
 var _enemies_remaining: int = 0
 
@@ -78,7 +82,7 @@ func _ready() -> void:
 		push_warning("[WaveDirector] player_health not assigned!")
 
 	_spawn_timer = Timer.new()
-	_spawn_timer.wait_time = spawn_interval
+	_spawn_timer.wait_time = default_spawn_interval
 	_spawn_timer.autostart = false
 	_spawn_timer.timeout.connect(_on_spawn_tick)
 	add_child(_spawn_timer)
@@ -101,6 +105,7 @@ func start_wave(wave_number: int, horde: bool = false) -> void:
 
 	_current_wave = wave_number
 	_spawn_queues.clear()
+	wave_started.emit(wave_number)
 
 	var is_elite: bool = wave_number > 0 and wave_number % 10 == 0
 	var is_ultimate: bool = wave_number > 0 and wave_number % 100 == 0
@@ -112,13 +117,18 @@ func start_wave(wave_number: int, horde: bool = false) -> void:
 	else:
 		_build_normal_wave(wave_number, horde)
 
-	# Count total queued enemies across all spawn points
+	# Count total queued enemies and active spawn points
 	_enemies_remaining = 0
+	_active_spawn_count = 0
 	for queue in _spawn_queues.values():
-		_enemies_remaining += (queue as Array).size()
+		var size: int = (queue as Array).size()
+		_enemies_remaining += size
+		if size > 0:
+			_active_spawn_count += 1
+	_active_spawn_count = maxi(1, _active_spawn_count)
 	enemies_remaining_changed.emit(_enemies_remaining)
-	print("[WaveDirector] Wave started: ", _enemies_remaining, " enemies across ", _spawn_queues.size(), " spawn points")
-	
+
+	_spawn_timer.wait_time = _compute_spawn_interval(wave_number, _enemies_remaining, _active_spawn_count)
 	_wave_active = true
 	_spawn_timer.start()
 
@@ -131,23 +141,56 @@ func _build_normal_wave(wave_number: int, horde: bool) -> void:
 	var tokens: int = _compute_tokens(wave_number)
 	var hp_mult: float = _compute_hp_multiplier(wave_number)
 	var available_types: Array = _get_unlocked_types(wave_number)
+	var max_group: int = int(10 + float(wave_number) / 4.0)
 
-	# Build flat enemy list by spending tokens on random available types
-	var enemy_list: Array[Enemy.EnemyType] = []
+	# Build a list of groups. Each group is a block of the same enemy type.
+	# Group size is proportional to remaining tokens divided by the type's cost,
+	# capped at max_group to avoid all tokens going to one type in low waves.
+	# Types are picked in sequence so same-cost types don't end up in the same group.
+	var groups: Array[Array] = []
 	var remaining: int = tokens
 
 	while remaining > 0 and not available_types.is_empty():
-		# Pick a random affordable type
 		var affordable: Array = available_types.filter(
 			func(t): return TOKEN_COST[t] <= remaining
 		)
 		if affordable.is_empty():
 			break
-		var chosen: Enemy.EnemyType = affordable[randi() % affordable.size()]
-		enemy_list.append(chosen)
-		remaining -= TOKEN_COST[chosen]
 
-	enemy_list.shuffle()
+		# Pick a random affordable type for this group
+		var chosen: Enemy.EnemyType = affordable[randi() % affordable.size()]
+		var cost: int = TOKEN_COST[chosen]
+
+		# Group size: proportional to remaining/cost, capped at max_group
+		var group_size: int = mini(int(remaining / cost), max_group)
+		group_size = maxi(1, group_size)
+
+		# Spend tokens and build the group
+		var actual_size: int = mini(group_size, remaining / cost)
+		var group: Array[Enemy.EnemyType] = []
+		for i in range(actual_size):
+			group.append(chosen)
+		groups.append(group)
+		remaining -= cost * actual_size
+
+		# Remove chosen type so next iteration picks a different one
+		# It will be re-added if tokens still remain after one full cycle
+		available_types.erase(chosen)
+		if available_types.is_empty():
+			# All types used once — refill with still-affordable types for next cycle
+			available_types = _get_unlocked_types(wave_number).filter(
+				func(t): return TOKEN_COST[t] <= remaining
+			)
+
+	# Shuffle group order so the sequence varies, but keep each group intact
+	groups.shuffle()
+
+	# Flatten groups into a single enemy list
+	var enemy_list: Array[Enemy.EnemyType] = []
+	for group in groups:
+		for type in group:
+			enemy_list.append(type)
+
 	_distribute_to_queues(enemy_list, horde, hp_mult)
 
 
@@ -278,7 +321,7 @@ func _spawn_single(spawn_idx: int, type: Enemy.EnemyType, hp_mult: float) -> voi
 		return
 
 	var enemy: Enemy = enemy_scene.instantiate()
-	_apply_stats(enemy, type, hp_mult)
+	_apply_stats(enemy, type, hp_mult, _compute_speed_mult(_current_wave))
 	enemy.map_director = _map_director
 	enemy.reached_base.connect(_on_enemy_reached_base)
 	enemy.died.connect(_on_enemy_removed)
@@ -289,7 +332,7 @@ func _spawn_single(spawn_idx: int, type: Enemy.EnemyType, hp_mult: float) -> voi
 # Kept for external use (e.g. debug, scripted events)
 func spawn_at_all(type: Enemy.EnemyType) -> void:
 	for i in range(_spawn_data.size()):
-		_spawn_single(i, type, 1.0)
+		_spawn_single(i, type, 1.0)  # No HP or speed scaling for manual spawns
 
 
 # -------------------------
@@ -298,7 +341,7 @@ func spawn_at_all(type: Enemy.EnemyType) -> void:
 
 # Tokens scale exponentially with wave number.
 func _compute_tokens(wave_number: int) -> int:
-	return int(10.0 * pow(1.15, wave_number))
+	return int(1 + (10 * wave_number * pow(1.01, wave_number)))
 
 
 # HP multiplier increases linearly: +hp_per_ten_waves every 10 waves.
@@ -334,13 +377,13 @@ func _make_entry(type: Enemy.EnemyType, hp_mult: float) -> Dictionary:
 # Stat templates
 # -------------------------
 
-func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float) -> void:
+func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mult: float = 1.0) -> void:
 	enemy.enemy_type = type
 	match type:
 		Enemy.EnemyType.ROGUE:
 			enemy.max_hp     = int(6 * hp_mult)
 			enemy.current_hp = enemy.max_hp
-			enemy.speed      = 250.0 * 50
+			enemy.speed      = 250.0 * 50 * speed_mult
 			enemy.damage     = 1
 			enemy.size       = 0.6
 			enemy.armor      = 0
@@ -349,7 +392,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float) -> void:
 		Enemy.EnemyType.NORMIE:
 			enemy.max_hp     = int(10 * hp_mult)
 			enemy.current_hp = enemy.max_hp
-			enemy.speed      = 80.0 * 50
+			enemy.speed      = 80.0 * 50 * speed_mult
 			enemy.damage     = 1
 			enemy.size       = 1.0
 			enemy.armor      = 0
@@ -358,7 +401,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float) -> void:
 		Enemy.EnemyType.WARRIOR:
 			enemy.max_hp     = int(30 * hp_mult)
 			enemy.current_hp = enemy.max_hp
-			enemy.speed      = 50.0 * 50
+			enemy.speed      = 50.0 * 50 * speed_mult
 			enemy.damage     = 2
 			enemy.size       = 1.2
 			enemy.armor      = 30
@@ -367,7 +410,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float) -> void:
 		Enemy.EnemyType.WIZARD:
 			enemy.max_hp     = int(15 * hp_mult)
 			enemy.current_hp = enemy.max_hp
-			enemy.speed      = 100.0 * 50
+			enemy.speed      = 100.0 * 50 * speed_mult
 			enemy.damage     = 2
 			enemy.size       = 1.0
 			enemy.armor      = 0
@@ -376,7 +419,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float) -> void:
 		Enemy.EnemyType.BOSS:
 			enemy.max_hp     = int(100 * hp_mult)
 			enemy.current_hp = enemy.max_hp
-			enemy.speed      = 30.0 * 50
+			enemy.speed      = 30.0 * 50 * speed_mult
 			enemy.damage     = 5
 			enemy.size       = 2.0
 			enemy.armor      = 50
@@ -385,11 +428,34 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float) -> void:
 		Enemy.EnemyType.UBER_BOSS:
 			enemy.max_hp     = int(300 * hp_mult)
 			enemy.current_hp = enemy.max_hp
-			enemy.speed      = 20.0 * 50
+			enemy.speed      = 20.0 * 50 * speed_mult
 			enemy.damage     = 10
 			enemy.size       = 3.0
 			enemy.armor      = 100
 			enemy.plating    = 5
+
+
+# -------------------------
+# Spawn interval and speed scaling
+# -------------------------
+
+# Spawn interval scales from default down to a minimum that ensures
+# at least 0.5% of total enemies spawn per second across all active spawn points.
+func _compute_spawn_interval(wave_number: int, total_enemies: int, active_spawns: int) -> float:
+	var speed_mult: float = _compute_speed_mult(wave_number)
+	var scaled_interval: float = default_spawn_interval / speed_mult
+
+	# Minimum interval: 0.5% of total enemies per second means
+	# 1 tick per (active_spawns / (total * 0.005)) seconds
+	var min_interval: float = float(active_spawns) / (float(total_enemies) * 0.005)
+	min_interval = maxf(min_interval, 0.05)  # Hard floor to avoid div-by-zero or absurd rates
+
+	return minf(scaled_interval, min_interval)
+
+
+# Speed multiplier goes from x1 at wave 0 to x3 at wave 200, capped there.
+func _compute_speed_mult(wave_number: int) -> float:
+	return lerp(1.0, 3.0, minf(float(wave_number) / 200.0, 1.0))
 
 
 # -------------------------

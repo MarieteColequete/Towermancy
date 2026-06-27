@@ -23,11 +23,12 @@ metadata/_custom_type_script = "uid://c1c3skgm6m735"
 
 [node name="World" type="Node2D"]
 
-[node name="MapDirector" type="Node2D" parent="." node_paths=PackedStringArray("cells", "wave_director")]
+[node name="MapDirector" type="Node2D" parent="." node_paths=PackedStringArray("cells", "wave_director", "game_ui")]
 script = ExtResource("1_hgrid")
 world = SubResource("Resource_e8e5r")
 cells = NodePath("Cells")
 wave_director = NodePath("WaveDirector")
+game_ui = NodePath("GameUI")
 
 [node name="Cells" type="TileMapLayer" parent="MapDirector"]
 tile_set = ExtResource("2_a0dt8")
@@ -40,8 +41,9 @@ player_health = NodePath("../Player")
 [node name="Player" type="Node" parent="MapDirector"]
 script = ExtResource("8_e8e5r")
 
-[node name="GameUI" type="CanvasLayer" parent="MapDirector" node_paths=PackedStringArray("wave_director")]
+[node name="GameUI" type="CanvasLayer" parent="MapDirector" node_paths=PackedStringArray("player", "wave_director")]
 script = ExtResource("9_112ik")
+player = NodePath("../Player")
 wave_director = NodePath("../WaveDirector")
 
 [node name="Camera2D" parent="." instance=ExtResource("6_7lyie")]

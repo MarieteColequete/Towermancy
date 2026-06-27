@@ -31,8 +31,12 @@ var _notif_container: VBoxContainer
 
 func _ready() -> void:
 	_build_ui()
-	_connect_signals()
 	_update_wave(0)
+
+
+# Called by MapDirector after all nodes are initialized.
+func initialize() -> void:
+	_connect_signals()
 
 
 func _build_ui() -> void:
@@ -78,14 +82,14 @@ func _connect_signals() -> void:
 		player.hp_changed.connect(_update_hp)
 		player.gold_changed.connect(_update_gold)
 		player.player_died.connect(_on_player_died)
-		# Read initial values directly — Player._ready() may not have run yet
-		_update_hp(player.max_hp, player.max_hp)
-		_update_gold(0)
+		_update_hp(player.current_hp, player.max_hp)
+		_update_gold(player.gold)
 	else:
 		push_warning("[GameUI] player not assigned.")
 
 	if wave_director != null:
 		wave_director.enemies_remaining_changed.connect(_update_enemies)
+		wave_director.wave_started.connect(_on_wave_started)
 	else:
 		push_warning("[GameUI] wave_director not assigned.")
 
@@ -102,6 +106,11 @@ func _update_wave(wave_number: int) -> void:
 
 func _update_enemies(count: int) -> void:
 	_enemies_label.text = "Enemies: %d" % count
+
+
+func _on_wave_started(wave_number: int) -> void:
+	set_wave(wave_number)
+	notify("Wave %d started!" % wave_number)
 
 func _update_gold(amount: int) -> void:
 	_gold_label.text = "Gold: %d" % amount
