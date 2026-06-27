@@ -17,14 +17,17 @@ var chunks: Dictionary[Vector2i, ChunkState] = {}
 # chunk coords -> depth (0 = origin, increases with distance)
 var chunk_depths: Dictionary[Vector2i, int] = {}
 
+# chunk coords -> direction toward parent (walk this way to reach depth - 1)
+# ORIGIN has no parent and is not present in this map
+var chunk_parent_dirs: Dictionary[Vector2i, Constants.Directions] = {}
+
 # ghost coords -> entry direction (direction path comes FROM)
 var ghost_chunks: Dictionary[Vector2i, Constants.Directions] = {}
 
 # ghost coords -> depth it will have when activated
 var ghost_depths: Dictionary[Vector2i, int] = {}
 
-# dead end coords -> entry direction (the single connection this chunk has)
-# a dead end is a PATH chunk with no exits (dirs has only the entry)
+# dead end coords -> entry direction
 var dead_ends: Dictionary[Vector2i, Constants.Directions] = {}
 
 var expansion_tokens: int = 50
@@ -47,22 +50,21 @@ func setup() -> void:
 # Chunk registration
 # -------------------------
 
-# Register a real chunk and update all derived state automatically.
-# dirs = all connection directions for this chunk (entry + exits).
-# For ORIGIN, dirs contains only exits (no entry).
 func register_chunk(c: Vector2i, state: ChunkState, dirs: Array[Constants.Directions] = []) -> void:
 	if DEBUG: print("[WorldData] Register chunk: ", c, " state=", state, " dirs=", dirs)
 	assert(not chunks.has(c), "Chunk already registered at: " + str(c))
 
 	chunks[c] = state
 
-	# Assign depth: origin is 0, others inherit from their ghost record
 	if state == ChunkState.ORIGIN:
 		chunk_depths[c] = 0
 	else:
 		chunk_depths[c] = ghost_depths.get(c, 0)
 
-	# Remove from ghost maps if pending
+	# For PATH chunks, dirs[0] is the entry direction = direction toward parent
+	if state == ChunkState.PATH and dirs.size() > 0:
+		chunk_parent_dirs[c] = dirs[0]
+
 	ghost_chunks.erase(c)
 	ghost_depths.erase(c)
 
@@ -73,26 +75,20 @@ func register_chunk(c: Vector2i, state: ChunkState, dirs: Array[Constants.Direct
 		_update_dead_ends(c, dirs)
 
 
-# Determine if this chunk is a dead end and update the registry accordingly.
-# Dead end = PATH chunk with no exits (dirs has only the entry direction).
-# ORIGIN with no exits is also a dead end (unusual but handled).
 func _update_dead_ends(c: Vector2i, dirs: Array[Constants.Directions]) -> void:
 	var is_origin: bool = chunks[c] == ChunkState.ORIGIN
 	var exit_count: int = dirs.size() if is_origin else dirs.size() - 1
 
 	if exit_count == 0:
-		# Store the entry direction so MapDirector knows which edge to use
 		var entry_dir: Constants.Directions = dirs[0] if not is_origin else Constants.Directions.NORTH
 		dead_ends[c] = entry_dir
 		if DEBUG: print("[WorldData] Dead end registered: ", c, " entry=", entry_dir)
 	else:
-		# Chunk has exits: no longer a dead end (expanded from ghost state)
 		if dead_ends.has(c):
 			dead_ends.erase(c)
 			if DEBUG: print("[WorldData] Dead end removed: ", c)
 
 
-# Register ghost neighbors reachable from a newly placed chunk.
 func _update_ghost_chunks(c: Vector2i, dirs: Array[Constants.Directions]) -> void:
 	var current_height: int = terrain.get_height(c)
 	var current_depth: int = chunk_depths.get(c, 0)
@@ -157,7 +153,7 @@ func compute_expansion_dirs(coords: Vector2i, entry_dir: Constants.Directions) -
 	var possible: Array[Constants.Directions] = _get_free_downhill_dirs(coords, entry_dir, current_height)
 
 	if possible.is_empty():
-		return dirs  # Dead end
+		return dirs
 
 	var chosen_dir: Constants.Directions = possible.pick_random()
 	dirs.append(chosen_dir)
@@ -237,16 +233,28 @@ func pick_random_ghost() -> Vector2i:
 func has_ghosts() -> bool:
 	return not ghost_chunks.is_empty()
 
-# Returns all dead ends with their distance-from-origin weight.
-# Array of { coords, entry_dir, weight }
-func get_dead_end_data() -> Array[Dictionary]:
+# Returns the direction toward the parent chunk (toward the base).
+# Checks real chunks first, then ghost chunks (which also have a known entry direction).
+# Returns -1 for ORIGIN (already at base) or unknown coords.
+func get_parent_dir(c: Vector2i) -> int:
+	# Real chunk: ORIGIN has no parent
+	if chunks.get(c, ChunkState.NULL) == ChunkState.ORIGIN:
+		return -1
+	# Real PATH chunk: direction stored at registration
+	if chunk_parent_dirs.has(c):
+		return chunk_parent_dirs[c]
+	# Ghost chunk: entry_dir points FROM the parent, so that IS the direction toward parent
+	if ghost_chunks.has(c):
+		return ghost_chunks[c]
+	return -1
+
+# Returns all spawn points: dead ends + active ghosts, with weight.
+func get_spawn_point_data() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for coords in dead_ends.keys():
-		result.append({
-			"coords": coords,
-			"entry_dir": dead_ends[coords],
-			"weight": coords.length()
-		})
+		result.append({ "coords": coords, "weight": float(coords.length()) })
+	for coords in ghost_chunks.keys():
+		result.append({ "coords": coords, "weight": float(coords.length()) })
 	return result
 
 

@@ -15,14 +15,12 @@ const TERRAIN_EMPTY: int = 0
 func _ready() -> void:
 	world.setup()
 	_generate_map()
-	# Pass dead end spawn data to WaveDirector — no WorldData reference crosses over
-	wave_director.receive_spawn_data(_build_spawn_data())
-	wave_director.spawn_wave(0, 100)
-	wave_director.spawn_wave(1, 100)
-	wave_director.spawn_wave(2, 100)
-	wave_director.spawn_wave(3, 100)
-	wave_director.spawn_wave(4, 100)
-	wave_director.spawn_wave(5, 100)
+	_sync_spawn_points()
+	wave_director.start_wave(10, true)
+	$GameUI.notify("TEST 1")
+	$GameUI.notify("TEST 2")
+	$GameUI.notify("TEST 3")
+	$GameUI.notify("TEST 4")
 
 
 # -------------------------
@@ -31,7 +29,13 @@ func _ready() -> void:
 
 func _generate_map() -> void:
 	_place_origin()
-	_expand_all(500)
+	_expand_all(150)
+
+
+# Public: expand map further and refresh spawn points
+func expand_map(max_steps: int = 500) -> void:
+	_expand_all(max_steps)
+	_sync_spawn_points()
 
 
 func _place_origin() -> void:
@@ -67,92 +71,54 @@ func _expand_step() -> void:
 
 
 # -------------------------
-# Spawn data for WaveDirector
+# Spawn points for WaveDirector
 # -------------------------
 
-# Builds a self-contained array of spawn descriptors.
-# Each entry has: spawn world position, waypoints to base, and weight.
-# WaveDirector receives this and never needs to query WorldData again.
-func _build_spawn_data() -> Array[Dictionary]:
-	var result: Array[Dictionary] = []
-	for dead_end in world.get_dead_end_data():
-		var coords: Vector2i = dead_end["coords"]
-		result.append({
-			"spawn_position": _chunk_center_world(coords),
-			"waypoints": _build_waypoints(coords),
-			"weight": dead_end["weight"]
+func _sync_spawn_points() -> void:
+	var data: Array[Dictionary] = []
+	for entry in world.get_spawn_point_data():
+		var coords: Vector2i = entry["coords"]
+		data.append({
+			"spawn_position": chunk_center_world(coords),
+			"chunk_coords": coords,
+			"weight": entry["weight"]
 		})
-	return result
-
-
-# Build the ordered world-space positions from dead end to origin.
-# Follows the depth gradient: each step picks the neighbor with depth - 1.
-func _build_waypoints(start: Vector2i) -> Array[Vector2]:
-	var waypoints: Array[Vector2] = []
-	var current: Vector2i = start
-	var visited: Dictionary[Vector2i, bool] = {}
-
-	while true:
-		if visited.has(current):
-			push_warning("[MapDirector] Cycle detected in waypoint build from " + str(start))
-			break
-
-		visited[current] = true
-		waypoints.append(_chunk_center_world(current))
-
-		var depth: int = world.get_chunk_depth(current)
-		if depth == 0:
-			break
-
-		var parent: Vector2i = _find_parent_chunk(current, depth)
-		if parent == current:
-			push_warning("[MapDirector] No parent found for chunk " + str(current))
-			break
-
-		current = parent
-
-	return waypoints
-
-
-# Returns the neighboring registered chunk with depth = current_depth - 1.
-# With no convergences in the graph, there is always exactly one such neighbor.
-func _find_parent_chunk(coords: Vector2i, current_depth: int) -> Vector2i:
-	for dir in _all_directions():
-		var neighbor: Vector2i = coords + Constants.direction_to_vector(dir)
-		if not world.is_chunk_registered(neighbor):
-			continue
-		if world.get_chunk_depth(neighbor) == current_depth - 1:
-			return neighbor
-	return coords  # Fallback: should never happen in a well-formed graph
+	wave_director.update_spawn_points(data)
 
 
 # -------------------------
 # Enemy navigation query
 # -------------------------
 
-# Called by Enemy nodes when they arrive at a chunk and need the next destination.
-# Returns the world-space center of the next chunk toward the base (depth - 1).
-# Returns Vector2.ZERO if already at the base.
-func get_next_waypoint(current_chunk: Vector2i) -> Vector2:
-	var depth: int = world.get_chunk_depth(current_chunk)
-	if depth == 0:
-		return Vector2.ZERO  # Already at base
+# Called by Enemy each time it arrives at a new chunk center.
+# Returns the world-space position of the next chunk toward the base.
+# Returns Vector2.ZERO if the enemy is already at the origin.
+func get_next_position(current_chunk: Vector2i) -> Vector2:
+	var parent_dir: int = world.get_parent_dir(current_chunk)
+	if parent_dir == -1:
+		return Vector2.ZERO  # At origin, signal base reached
+	var parent_coords: Vector2i = current_chunk + Constants.direction_to_vector(parent_dir)
+	return chunk_center_world(parent_coords)
 
-	var parent: Vector2i = _find_parent_chunk(current_chunk, depth)
-	return _chunk_center_world(parent)
+
+# Converts a world-space position to the chunk it belongs to.
+func world_to_chunk(world_pos: Vector2) -> Vector2i:
+	var cell: Vector2i = Vector2i(world_pos / Constants.CELL_SIZE)
+	return Vector2i(
+		floori(float(cell.x) / Constants.CHUNK_SIZE.x),
+		floori(float(cell.y) / Constants.CHUNK_SIZE.y)
+	)
 
 
 # -------------------------
 # Coordinate helpers
 # -------------------------
 
-# World-space center of a chunk in pixels.
-func _chunk_center_world(chunk: Vector2i) -> Vector2:
+# World-space pixel center of a chunk.
+func chunk_center_world(chunk: Vector2i) -> Vector2:
 	var center_cell: Vector2i = chunk * Constants.CHUNK_SIZE + Constants.CHUNK_SIZE / 2
 	return Vector2(center_cell * Constants.CELL_SIZE) + Vector2(Constants.CELL_SIZE, Constants.CELL_SIZE) * 0.5
 
-
-# World-space top-left cell of a chunk.
 func _chunk_to_cell_origin(chunk: Vector2i) -> Vector2i:
 	return chunk * Constants.CHUNK_SIZE
 
@@ -215,14 +181,12 @@ func _add_line_cells(
 
 
 func _render_path_chunk(chunk: Vector2i, dirs: Array[Constants.Directions], is_origin: bool) -> void:
-	# Paint whole chunk as buildable, then overlay path cells
 	var all_cells: Array[Vector2i] = []
 	var origin := _chunk_to_cell_origin(chunk)
 	for x in range(origin.x, origin.x + Constants.CHUNK_SIZE.x):
 		for y in range(origin.y, origin.y + Constants.CHUNK_SIZE.y):
 			all_cells.append(Vector2i(x, y))
 	_render_buildable_cells(all_cells)
-
 	_render_path_cells(_build_path_cells(chunk, dirs, is_origin))
 
 

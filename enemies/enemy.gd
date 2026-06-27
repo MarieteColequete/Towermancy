@@ -13,18 +13,16 @@ enum EnemyType { ROGUE, NORMIE, WARRIOR, WIZARD, BOSS, UBER_BOSS }
 
 var enemy_type: EnemyType = EnemyType.NORMIE
 
-# Icons per type — assign textures in the Inspector (order matches EnemyType enum).
 @export var icons: Array[Texture2D] = []
-
-# Rotation speed of the icon in radians per second.
 @export var rotation_speed: float = 1.5
+
 var max_hp: int = 10
 var current_hp: int = 10
-var speed: float = 80.0   # Pixels per second
-var damage: int = 1       # Damage dealt to base on arrival
-var size: float = 1.0     # Visual scale
-var armor: int = 0        # Percentage damage reduction: final = raw * (100 / (100 + armor))
-var plating: int = 0      # Flat reduction per hit before armor, minimum 1 after
+var speed: float = 80.0
+var damage: int = 1
+var size: float = 1.0
+var armor: int = 0
+var plating: int = 0
 
 # -------------------------
 # Signals
@@ -37,9 +35,11 @@ signal died
 # Movement state
 # -------------------------
 
-# Pre-built world-space positions from spawn to base, assigned by WaveDirector.
-var waypoints: Array[Vector2] = []
-var _current_waypoint_index: int = 0
+# Reference to MapDirector, set by WaveDirector before activation.
+var map_director: Node = null
+
+# Current movement target in world-space. Updated on arrival at each chunk center.
+var _target: Vector2 = Vector2.ZERO
 var _active: bool = false
 
 
@@ -53,9 +53,9 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_rotate_icon(delta)
-	if not _active or waypoints.is_empty():
+	if not _active:
 		return
-	_move_along_path(delta)
+	_move_toward_target(delta)
 
 
 # -------------------------
@@ -83,55 +83,56 @@ func _rotate_icon(delta: float) -> void:
 # Activation
 # -------------------------
 
-# Called by WaveDirector after waypoints are assigned.
-func activate() -> void:
-	if waypoints.is_empty():
-		push_warning("[Enemy] Activated with no waypoints.")
+# Called by WaveDirector after map_director and spawn position are set.
+func activate(spawn_position: Vector2) -> void:
+	if map_director == null:
+		push_error("[Enemy] map_director not set before activate().")
 		return
+	position = spawn_position
+	_request_next_target()
 	_active = true
-	position = waypoints[0]
-	_current_waypoint_index = 1  # waypoints[0] is spawn; head toward index 1
 
 
 # -------------------------
 # Movement
 # -------------------------
 
-func _move_along_path(delta: float) -> void:
-	if _current_waypoint_index >= waypoints.size():
-		_on_reached_base()
-		return
-
-	var target: Vector2 = waypoints[_current_waypoint_index]
-	var to_target: Vector2 = target - position
+func _move_toward_target(delta: float) -> void:
+	var to_target: Vector2 = _target - position
 	var dist: float = to_target.length()
 	var move: float = speed * delta
 
 	if move >= dist:
-		position = target
-		_current_waypoint_index += 1
-		if _current_waypoint_index >= waypoints.size():
-			_on_reached_base()
+		# Arrived at chunk center
+		position = _target
+		_request_next_target()
 	else:
 		position += to_target.normalized() * move
+
+
+# Ask MapDirector for the next chunk center to move toward.
+func _request_next_target() -> void:
+	var current_chunk: Vector2i = map_director.world_to_chunk(position)
+	var next_pos: Vector2 = map_director.get_next_position(current_chunk)
+
+	if next_pos == Vector2.ZERO:
+		# get_next_position returns ZERO when at origin = base reached
+		_on_reached_base()
+		return
+
+	_target = next_pos
 
 
 # -------------------------
 # Damage
 # -------------------------
 
-# Returns the actual damage dealt after reductions.
 func take_damage(raw: int) -> int:
-	# Step 1: plating — flat reduction, minimum 1 result
 	var after_plating: int = max(1, raw - plating)
-
-	# Step 2: armor — percentage reduction: final = after_plating * (100 / (100 + armor))
 	var after_armor: int = max(1, int(float(after_plating) * (100.0 / (100.0 + float(armor)))))
-
 	current_hp -= after_armor
 	if current_hp <= 0:
 		_on_died()
-
 	return after_armor
 
 
