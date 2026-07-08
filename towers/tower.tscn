@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://gayhr1jurjtw"]
+
+[ext_resource type="Script" uid="uid://dghpjfjh0pxu0" path="res://towers/tower.gd" id="1_wmotl"]
+
+[node name="Tower" type="Node2D" node_paths=PackedStringArray("_weapon_spawn")]
+script = ExtResource("1_wmotl")
+_weapon_spawn = NodePath("WeaponSpawn")
+
+[node name="WeaponSpawn" type="Marker2D" parent="."]

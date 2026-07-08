@@ -18,7 +18,7 @@ func _ready() -> void:
 	_generate_map()
 	_sync_spawn_points()
 	game_ui.initialize()
-	wave_director.start_wave(30, false)
+	wave_director.start_wave(10, false)
 
 
 # -------------------------
@@ -27,7 +27,7 @@ func _ready() -> void:
 
 func _generate_map() -> void:
 	_place_origin()
-	_expand_all(150)
+	_expand_all(20)
 
 
 # Public: expand map further and refresh spawn points
