@@ -24,6 +24,7 @@ metadata/_custom_type_script = "uid://ceiaul6onrlac"
 script = ExtResource("1_wmotl")
 _stats = SubResource("Resource_2233p")
 _stats_scaling = SubResource("Resource_nbqd2")
+target_mode = 2
 
 [node name="TowerVisuals" type="Node2D" parent="." node_paths=PackedStringArray("_cannon")]
 script = ExtResource("2_uyl23")

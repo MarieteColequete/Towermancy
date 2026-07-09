@@ -405,7 +405,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.damage     = 2
 			enemy.size       = 1.2
 			enemy.armor      = 30
-			enemy.plating    = 1
+			enemy.plating    = 0
 
 		Enemy.EnemyType.WIZARD:
 			enemy.max_hp     = int(15 * hp_mult)
@@ -414,13 +414,13 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.damage     = 2
 			enemy.size       = 1.0
 			enemy.armor      = 0
-			enemy.plating    = 0
+			enemy.plating    = int(3 * hp_mult)
 
 		Enemy.EnemyType.BOSS:
 			enemy.max_hp     = int(100 * hp_mult)
 			enemy.current_hp = enemy.max_hp
 			enemy.speed      = 30.0 * 50 * speed_mult
-			enemy.damage     = 5
+			enemy.damage     = 15
 			enemy.size       = 2.0
 			enemy.armor      = 50
 			enemy.plating    = 3
@@ -429,10 +429,10 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.max_hp     = int(300 * hp_mult)
 			enemy.current_hp = enemy.max_hp
 			enemy.speed      = 20.0 * 50 * speed_mult
-			enemy.damage     = 10
+			enemy.damage     = 100
 			enemy.size       = 3.0
 			enemy.armor      = 100
-			enemy.plating    = 5
+			enemy.plating    = int(5 * hp_mult)
 
 
 # -------------------------
