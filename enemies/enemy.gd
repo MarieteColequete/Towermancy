@@ -1,21 +1,16 @@
 class_name Enemy
 extends Node2D
-
 # -------------------------
 # Enemy types
 # -------------------------
-
 enum EnemyType { ROGUE, NORMIE, WARRIOR, WIZARD, BOSS, UBER_BOSS }
-
 # -------------------------
 # Stats
 # -------------------------
-
 var enemy_type: EnemyType = EnemyType.NORMIE
-
 @export var icons: Array[Texture2D] = []
 @export var rotation_speed: float = 1.5
-
+@export var damage_number_scene: PackedScene
 var max_hp: int = 10
 var current_hp: int = 10
 var speed: float = 80.0
@@ -23,45 +18,33 @@ var damage: int = 1
 var size: float = 1.0
 var armor: int = 0
 var plating: int = 0
-
 # -------------------------
 # Signals
 # -------------------------
-
 signal reached_base(damage: int)
 signal died
-
 # -------------------------
 # Movement state
 # -------------------------
-
 # Reference to MapDirector, set by WaveDirector before activation.
 var map_director: Node = null
-
 # Current movement target in world-space. Updated on arrival at each chunk center.
 var _target: Vector2 = Vector2.ZERO
 var _active: bool = false
-
-
 # -------------------------
 # Lifecycle
 # -------------------------
-
 func _ready() -> void:
 	scale = Vector2(size * 10.0, size * 10.0)
 	_apply_icon()
-
 func _physics_process(delta: float) -> void:
 	_rotate_icon(delta)
 	if not _active:
 		return
 	_move_toward_target(delta)
-
-
 # -------------------------
 # Icon
 # -------------------------
-
 func _apply_icon() -> void:
 	var icon: Sprite2D = get_node_or_null("Icon")
 	if icon == null:
@@ -72,79 +55,72 @@ func _apply_icon() -> void:
 		icon.texture = icons[idx]
 	else:
 		push_warning("[Enemy] No icon assigned for type: " + str(enemy_type))
-
 func _rotate_icon(delta: float) -> void:
 	var icon: Sprite2D = get_node_or_null("Icon")
 	if icon != null:
 		icon.rotation += rotation_speed * delta
-
-
 # -------------------------
 # Activation
 # -------------------------
-
 # Called by WaveDirector after map_director and spawn position are set.
 func activate(spawn_position: Vector2) -> void:
 	if map_director == null:
 		push_error("[Enemy] map_director not set before activate().")
 		return
 	position = spawn_position
+	add_to_group("enemies")
 	_request_next_target()
 	_active = true
-
-
 # -------------------------
 # Movement
 # -------------------------
-
 func _move_toward_target(delta: float) -> void:
 	var to_target: Vector2 = _target - position
 	var dist: float = to_target.length()
 	var move: float = speed * delta
-
 	if move >= dist:
 		# Arrived at chunk center
 		position = _target
 		_request_next_target()
 	else:
 		position += to_target.normalized() * move
-
-
 # Ask MapDirector for the next chunk center to move toward.
 func _request_next_target() -> void:
 	var current_chunk: Vector2i = map_director.world_to_chunk(position)
 	var next_pos: Vector2 = map_director.get_next_position(current_chunk)
-
 	if next_pos == Vector2.ZERO:
 		# get_next_position returns ZERO when at origin = base reached
 		_on_reached_base()
 		return
-
 	_target = next_pos
-
-
 # -------------------------
 # Damage
 # -------------------------
-
 func take_damage(raw: int) -> int:
 	var after_plating: int = max(1, raw - plating)
 	var after_armor: int = max(1, int(float(after_plating) * (100.0 / (100.0 + float(armor)))))
 	current_hp -= after_armor
+	_spawn_damage_number(after_armor)
 	if current_hp <= 0:
 		_on_died()
 	return after_armor
+#> DAMAGE NUMBERS
+# Spawns an independent floating text scene showing the post-mitigation
+# damage taken, positioned at this enemy's location.
 
-
+func _spawn_damage_number(damage_amount: int) -> void:
+	assert(damage_number_scene != null, "[Enemy] damage_number_scene not assigned.")
+	var damage_number: Node2D = damage_number_scene.instantiate()
+	get_tree().current_scene.add_child(damage_number)
+	damage_number.global_position = global_position
+	damage_number.setup(damage_amount)
 # -------------------------
 # Events
 # -------------------------
-
 func _on_reached_base() -> void:
 	_active = false
 	reached_base.emit(damage)
 	queue_free()
-
 func _on_died() -> void:
 	_active = false
 	died.emit()

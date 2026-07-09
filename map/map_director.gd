@@ -18,7 +18,7 @@ func _ready() -> void:
 	_generate_map()
 	_sync_spawn_points()
 	game_ui.initialize()
-	wave_director.start_wave(10, false)
+	wave_director.start_wave(15, false)
 
 
 # -------------------------

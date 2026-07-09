@@ -1,0 +1,22 @@
+[gd_scene load_steps=4 format=3 uid="uid://cl0bl26wme4c5"]
+
+[ext_resource type="Script" uid="uid://bofq8lh2cylw3" path="res://towers/machine_gun/bullet.gd" id="1_utsto"]
+[ext_resource type="Texture2D" uid="uid://q5tya5oxtg12" path="res://assets/towers/machine_gun/bullet.png" id="2_utsto"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_utsto"]
+radius = 23.021729
+
+[node name="Bullet" type="Node2D"]
+scale = Vector2(10, 10)
+script = ExtResource("1_utsto")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = 5
+scale = Vector2(0.1328125, 0.1328125)
+texture = ExtResource("2_utsto")
+
+[node name="Hitbox" type="Area2D" parent="."]
+collision_layer = 2
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Hitbox"]
+shape = SubResource("CircleShape2D_utsto")

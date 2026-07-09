@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="280mm"
+   height="280mm"
+   viewBox="0 0 280 280"
+   version="1.1"
+   id="svg1"
+   inkscape:export-filename="machine_gun_logo.svg"
+   inkscape:export-xdpi="54.186665"
+   inkscape:export-ydpi="54.186665"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="true"
+     inkscape:zoom="0.76167929"
+     inkscape:cx="621.65271"
+     inkscape:cy="565.19851"
+     inkscape:window-width="1920"
+     inkscape:window-height="1057"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1">
+    <inkscape:grid
+       id="grid1"
+       units="mm"
+       originx="-10"
+       originy="-10"
+       spacingx="9.9999999"
+       spacingy="9.9999999"
+       empcolor="#0099e5"
+       empopacity="0.30196078"
+       color="#0099e5"
+       opacity="0.14901961"
+       empspacing="5"
+       enabled="true"
+       visible="true" />
+    <inkscape:page
+       x="0"
+       y="0"
+       width="280"
+       height="280"
+       id="page2"
+       margin="0"
+       bleed="0" />
+  </sodipodi:namedview>
+  <defs
+     id="defs1" />
+  <g
+     inkscape:label="Capa 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-9.9999998,-9.9999998)">
+    <g
+       id="g3"
+       inkscape:label="Base">
+      <path
+         style="fill:#1a1a1a;stroke:#1a1a1a;stroke-width:0;stroke-linecap:round;paint-order:markers fill stroke"
+         d="M 10,10 150,39.999999 290,10 260,150 290,290 150,260 10,290 39.999999,150 Z"
+         id="path3" />
+      <path
+         style="fill:#333333;stroke:#1a1a1a;stroke-width:0;stroke-linecap:round;paint-order:markers fill stroke"
+         d="M 20,20 C 63.333333,30 106.66667,39.999999 150,50 193.3342,39.9998 279.99999,20 279.99999,20 L 250,150 279.99999,279.99999 150,250 20,279.99999 50,150 Z"
+         id="path2" />
+    </g>
+    <g
+       id="g5"
+       inkscape:label="Head">
+      <circle
+         style="fill:#aa8800;stroke:#1a1a1a;stroke-width:0;stroke-linecap:round;paint-order:markers fill stroke"
+         id="path4"
+         cx="150"
+         cy="150"
+         r="80" />
+      <circle
+         style="fill:#d4aa00;stroke:#1a1a1a;stroke-width:0;stroke-linecap:round;paint-order:markers fill stroke"
+         id="path5"
+         cx="150"
+         cy="150"
+         r="70" />
+    </g>
+    <path
+       style="fill:#d4aa00;stroke:#1a1a1a;stroke-width:0;stroke-linecap:round;paint-order:markers fill stroke"
+       d="m 210,120 80,10 v 40 l -80,10 z"
+       id="path6" />
+  </g>
+</svg>

@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://cry0p2qtj4wlm"]
+[gd_scene load_steps=14 format=3 uid="uid://cry0p2qtj4wlm"]
 
 [ext_resource type="Script" uid="uid://beg1chy0g4lep" path="res://map/map_director.gd" id="1_hgrid"]
 [ext_resource type="TileSet" uid="uid://bruirjsq7disv" path="res://map/chunks/chunk_tileset.tres" id="2_a0dt8"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" uid="uid://qhtnspy1q0dc" path="res://enemies/enemy.tscn" id="7_kxmgb"]
 [ext_resource type="Script" uid="uid://bfky6t5ijrdp1" path="res://map/player/player.gd" id="8_e8e5r"]
 [ext_resource type="Script" uid="uid://c43mgu2cdb3q8" path="res://map/UI/game_ui.gd" id="9_112ik"]
+[ext_resource type="PackedScene" uid="uid://gayhr1jurjtw" path="res://towers/tower.tscn" id="10_i5grx"]
 
 [sub_resource type="Resource" id="Resource_112ik"]
 script = ExtResource("4_kxmgb")
@@ -45,5 +46,8 @@ script = ExtResource("8_e8e5r")
 script = ExtResource("9_112ik")
 player = NodePath("../Player")
 wave_director = NodePath("../WaveDirector")
+
+[node name="Tower" parent="MapDirector" instance=ExtResource("10_i5grx")]
+position = Vector2(-769, -917)
 
 [node name="Camera2D" parent="." instance=ExtResource("6_7lyie")]
