@@ -8,7 +8,7 @@ For this project I started from Unity's **Roll-a-Ball** learning project. The or
 
 I wanted to push it a little further by changing the way the level is experienced rather than simply adding more mechanics. My goal was to make visibility and positioning matter.
 
-![Roll-a-Ball](./blogs/imgs/rollaball.png)
+![Roll-a-Ball](imgs/rollaball.png)
 
 # Darkness
 
