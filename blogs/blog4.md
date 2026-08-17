@@ -23,7 +23,7 @@ func _compute_tokens(wave_number: int) -> int:
 
 Using tokens, the wave manager can recruit enemies to fight in the current wave, which will be spawned in groups to avoid a random clutter of enemies.
 
-![Enemies spawning in groups](https://i.imgur.com/WWK8560.gif)
+![Enemies spawning in groups](imgs/enemies_groups.gif)
 *Enemies spawning in groups*
 
 Some enemies have restrictions on how early in the game they can appear, so that information is also factored in, alongside how many of them can be grouped together for deployment:
