@@ -12,7 +12,7 @@ Since the objective was to generate large grids of paths, ideally I needed somet
 
 I got inspired by mountains and rivers to make my solution: A class in my code creates a height map that can be accessed by providing a set of coordinates, getting the height on that specific spot. Using these values, paths can extend like rivers, "falling down the mountain". This creates a constant time solution, but it still needs some tweaking to achieve consistency, since there is still a chance paths will stop each other.
 
-![Height map](/images/mt1.png)
+![Height map](imgs/mt1.png)
 *First iteration of the procedural height map*
 
 I started by creating a simple pyramid shape using this code:
@@ -36,7 +36,7 @@ func get_height(coords: Vector2i) -> int:
 
 To achieve this, I created a tool which could render the height maps, so I could judge whether the noise pattern was right or not and started to tweak some values. 
 
-![Height map](/images/mt2.png)
+![Height map](imgs/mt2.png)
 *Second iteration of the procedural height map, brighter zones represent higher steepness*
 
 When I got the noise to behave as I needed, I started to wonder how to ensure that paths won't ever stop each other from expanding. After some headaches, I realized that, I actually don't need to do that, I just need to **ensure that at least one path can expand**.
@@ -89,7 +89,7 @@ func _apply_fork_logic(
 
 The grid is divided into chunks, each one being a 3x3 block of cells. The reason for this is purely practical: a single cell is too small to draw a meaningful path through, and it makes the coordinate system much cleaner to work with. All the generation logic operates on chunk coordinates (simple integer pairs), while the rendering layer translates those into cell coordinates when it actually needs to paint something on screen. This separation makes it easy to change the visual scale of the world without touching any of the generation logic.
 
-![Enemies following a generated path](https://i.imgur.com/NgAekI5.gif)
+![Enemies following a generated path](imgs/enemies_path.gif)
 *Enemies following a generated path*
 
 
@@ -104,7 +104,7 @@ h(c) = -max(|cx|, |cy|) × 50  +  noise(cx, cy) × 10
 
 The first term creates a pyramid using [Chebyshev distance](https://en.wikipedia.org/wiki/Chebyshev_distance), dividing the grid into concentric "shells" around the origin. The second is a Ridged Simplex noise with domain warp. Since Ridged noise is always non-negative (computed as `1 - |simplex|`), its contribution after scaling sits in `[0, 10]`.
 
-![Height analysis](/images/height_analysis.png)
+![Height analysis](imgs/height_analysis.png)
 *Left: Chebyshev shells around the origin. Right: best neighbor reachability considering only the pyramid component.*
 
 The height difference between adjacent chunks on different shells is always exactly `±50`, while the maximum noise delta between any two neighbors is `10`. So if a neighbor sits on a shell further from the origin, no noise value can make it reachable:
