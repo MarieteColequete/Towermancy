@@ -18,4 +18,4 @@ Towermancy is a 2D tower defense game focused on wave-based survival and player-
 ## 🔗 Demo & Video
 
 - **Playable WebGL Build:** [Try it here](https://example.com/webgl)  
-- **Demo Video (~2 min):** [Watch here](https://example.com/video)
+- **Demo Video (~2 min):** [Watch here](https://youtu.be/XrDzxJMuzOQ)
