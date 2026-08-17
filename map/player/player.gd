@@ -7,7 +7,7 @@ extends Node
 
 @export var max_hp: int = Constants.STARTING_HP
 var current_hp: int
-var gold: int = 0
+var gold: int = 1000
 
 # -------------------------
 # Signals

@@ -9,7 +9,7 @@ const DEBUG := false
 # State
 # -------------------------
 
-enum ChunkState { NULL, PATH, EMPTY, ORIGIN }
+enum ChunkState { NULL, PATH, EMPTY, ORIGIN, BUILT }
 
 # chunk coords -> state
 var chunks: Dictionary[Vector2i, ChunkState] = {}
@@ -73,6 +73,22 @@ func register_chunk(c: Vector2i, state: ChunkState, dirs: Array[Constants.Direct
 		_update_ghost_chunks(c, dirs)
 		_register_empty_chunks_around(c)
 		_update_dead_ends(c, dirs)
+
+
+# Marks a chunk as BUILT. Only valid for EMPTY chunks.
+func build_on_chunk(c: Vector2i) -> void:
+	assert(chunks.get(c, ChunkState.NULL) == ChunkState.EMPTY, "Cannot build on non-EMPTY chunk: " + str(c))
+	chunks[c] = ChunkState.BUILT
+
+
+# Reverts a BUILT chunk back to EMPTY (for future sell support).
+func clear_chunk(c: Vector2i) -> void:
+	assert(chunks.get(c, ChunkState.NULL) == ChunkState.BUILT, "Cannot clear non-BUILT chunk: " + str(c))
+	chunks[c] = ChunkState.EMPTY
+
+
+func is_buildable(c: Vector2i) -> bool:
+	return chunks.get(c, ChunkState.NULL) == ChunkState.EMPTY
 
 
 func _update_dead_ends(c: Vector2i, dirs: Array[Constants.Directions]) -> void:
@@ -233,22 +249,15 @@ func pick_random_ghost() -> Vector2i:
 func has_ghosts() -> bool:
 	return not ghost_chunks.is_empty()
 
-# Returns the direction toward the parent chunk (toward the base).
-# Checks real chunks first, then ghost chunks (which also have a known entry direction).
-# Returns -1 for ORIGIN (already at base) or unknown coords.
 func get_parent_dir(c: Vector2i) -> int:
-	# Real chunk: ORIGIN has no parent
 	if chunks.get(c, ChunkState.NULL) == ChunkState.ORIGIN:
 		return -1
-	# Real PATH chunk: direction stored at registration
 	if chunk_parent_dirs.has(c):
 		return chunk_parent_dirs[c]
-	# Ghost chunk: entry_dir points FROM the parent, so that IS the direction toward parent
 	if ghost_chunks.has(c):
 		return ghost_chunks[c]
 	return -1
 
-# Returns all spawn points: dead ends + active ghosts, with weight.
 func get_spawn_point_data() -> Array[Dictionary]:
 	var result: Array[Dictionary] = []
 	for coords in dead_ends.keys():

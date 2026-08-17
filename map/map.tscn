@@ -2,34 +2,32 @@
 
 [ext_resource type="Script" uid="uid://beg1chy0g4lep" path="res://map/map_director.gd" id="1_hgrid"]
 [ext_resource type="TileSet" uid="uid://bruirjsq7disv" path="res://map/chunks/chunk_tileset.tres" id="2_a0dt8"]
-[ext_resource type="FastNoiseLite" uid="uid://7c63pdy2srlt" path="res://map/mountain/m_noise.tres" id="3_7lyie"]
-[ext_resource type="Script" uid="uid://c1c3skgm6m735" path="res://map/data/world_data.gd" id="4_5jdw0"]
-[ext_resource type="Script" uid="uid://dobklat6w58d2" path="res://map/mountain/terrain_generator.gd" id="4_kxmgb"]
+[ext_resource type="Resource" uid="uid://ccwuyitlsjl8d" path="res://map/data/map.tres" id="2_lct0g"]
 [ext_resource type="Script" uid="uid://dq1yfqy3gsxef" path="res://map/wave_director.gd" id="6_5jdw0"]
 [ext_resource type="PackedScene" uid="uid://bm35v7fddibd" path="res://lab/camera_2d.tscn" id="6_7lyie"]
 [ext_resource type="PackedScene" uid="uid://qhtnspy1q0dc" path="res://enemies/enemy.tscn" id="7_kxmgb"]
 [ext_resource type="Script" uid="uid://bfky6t5ijrdp1" path="res://map/player/player.gd" id="8_e8e5r"]
 [ext_resource type="Script" uid="uid://c43mgu2cdb3q8" path="res://map/UI/game_ui.gd" id="9_112ik"]
+[ext_resource type="Script" uid="uid://b68llh1aar2j" path="res://map/UI/tower_shop_slot_config.gd" id="9_lct0g"]
 [ext_resource type="PackedScene" uid="uid://gayhr1jurjtw" path="res://towers/tower.tscn" id="10_i5grx"]
+[ext_resource type="Script" uid="uid://c8rirromlxr0k" path="res://map/UI/tower_shop.gd" id="11_lct0g"]
+[ext_resource type="Script" uid="uid://d3arel0u3k2yq" path="res://map/chunks/tower_placer.gd" id="12_k8tny"]
 
-[sub_resource type="Resource" id="Resource_112ik"]
-script = ExtResource("4_kxmgb")
-noise = ExtResource("3_7lyie")
-metadata/_custom_type_script = "uid://dobklat6w58d2"
-
-[sub_resource type="Resource" id="Resource_e8e5r"]
-script = ExtResource("4_5jdw0")
-terrain = SubResource("Resource_112ik")
-metadata/_custom_type_script = "uid://c1c3skgm6m735"
+[sub_resource type="Resource" id="Resource_lct0g"]
+script = ExtResource("9_lct0g")
+tower_scene = ExtResource("10_i5grx")
+metadata/_custom_type_script = "uid://b68llh1aar2j"
 
 [node name="World" type="Node2D"]
 
-[node name="MapDirector" type="Node2D" parent="." node_paths=PackedStringArray("cells", "wave_director", "game_ui")]
+[node name="MapDirector" type="Node2D" parent="." node_paths=PackedStringArray("cells", "wave_director", "game_ui", "tower_shop", "tower_placer")]
 script = ExtResource("1_hgrid")
-world = SubResource("Resource_e8e5r")
+world = ExtResource("2_lct0g")
 cells = NodePath("Cells")
 wave_director = NodePath("WaveDirector")
 game_ui = NodePath("GameUI")
+tower_shop = NodePath("TowerShop")
+tower_placer = NodePath("TowerPlacer")
 
 [node name="Cells" type="TileMapLayer" parent="MapDirector"]
 tile_set = ExtResource("2_a0dt8")
@@ -47,7 +45,20 @@ script = ExtResource("9_112ik")
 player = NodePath("../Player")
 wave_director = NodePath("../WaveDirector")
 
-[node name="Tower" parent="MapDirector" instance=ExtResource("10_i5grx")]
-position = Vector2(-769, -917)
+[node name="TowerShop" type="CanvasLayer" parent="MapDirector" node_paths=PackedStringArray("tower_placer", "player", "game_ui")]
+script = ExtResource("11_lct0g")
+slot_configs = Array[ExtResource("9_lct0g")]([SubResource("Resource_lct0g")])
+tower_placer = NodePath("../TowerPlacer")
+player = NodePath("../Player")
+game_ui = NodePath("../GameUI")
+
+[node name="TowerPlacer" type="Node2D" parent="MapDirector" node_paths=PackedStringArray("game_ui", "player", "tower_container")]
+script = ExtResource("12_k8tny")
+world = ExtResource("2_lct0g")
+game_ui = NodePath("../GameUI")
+player = NodePath("../Player")
+tower_container = NodePath("../Towers")
+
+[node name="Towers" type="Node2D" parent="MapDirector"]
 
 [node name="Camera2D" parent="." instance=ExtResource("6_7lyie")]

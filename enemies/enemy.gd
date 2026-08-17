@@ -15,6 +15,7 @@ var max_hp: int = 10
 var current_hp: int = 10
 var speed: float = 80.0
 var damage: int = 1
+var gold_reward: int = 1
 var size: float = 1.0
 var armor: int = 0
 var plating: int = 0
@@ -22,7 +23,7 @@ var plating: int = 0
 # Signals
 # -------------------------
 signal reached_base(damage: int)
-signal died
+signal died(gold_reward: int)
 # -------------------------
 # Movement state
 # -------------------------
@@ -123,5 +124,5 @@ func _on_reached_base() -> void:
 	queue_free()
 func _on_died() -> void:
 	_active = false
-	died.emit()
+	died.emit(gold_reward)
 	queue_free()

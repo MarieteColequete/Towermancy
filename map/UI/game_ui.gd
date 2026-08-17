@@ -1,4 +1,11 @@
+class_name GameUI
 extends CanvasLayer
+
+# -------------------------
+# Signals
+# -------------------------
+
+signal next_wave_pressed
 
 # -------------------------
 # References (assign in Inspector)
@@ -20,6 +27,7 @@ var _hp_label: Label
 var _wave_label: Label
 var _enemies_label: Label
 var _gold_label: Label
+var _next_wave_btn: Button
 
 # VBoxContainer that stacks notifications bottom-up
 var _notif_container: VBoxContainer
@@ -31,7 +39,7 @@ var _notif_container: VBoxContainer
 
 func _ready() -> void:
 	_build_ui()
-	_update_wave(0)
+	_update_wave(1)
 
 
 # Called by MapDirector after all nodes are initialized.
@@ -59,6 +67,15 @@ func _build_ui() -> void:
 	vbox.add_child(_wave_label)
 	vbox.add_child(_enemies_label)
 	vbox.add_child(_gold_label)
+
+	# --- Bottom-left next wave button ---
+	_next_wave_btn = Button.new()
+	_next_wave_btn.text = "Next Wave"
+	_next_wave_btn.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	_next_wave_btn.offset_top = -50
+	_next_wave_btn.offset_right = 150
+	_next_wave_btn.pressed.connect(_on_next_wave_pressed)
+	add_child(_next_wave_btn)
 
 	# --- Bottom-right notification stack ---
 	_notif_container = VBoxContainer.new()
@@ -125,6 +142,21 @@ func _on_player_died() -> void:
 
 func set_wave(wave_number: int) -> void:
 	_update_wave(wave_number)
+
+func show_next_wave_button() -> void:
+	_next_wave_btn.visible = true
+
+func hide_next_wave_button() -> void:
+	_next_wave_btn.visible = false
+
+
+# -------------------------
+# Next wave button
+# -------------------------
+
+func _on_next_wave_pressed() -> void:
+	hide_next_wave_button()
+	next_wave_pressed.emit()
 
 
 # Show a notification in the bottom-right corner.

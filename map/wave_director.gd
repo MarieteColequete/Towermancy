@@ -388,6 +388,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.size       = 0.6
 			enemy.armor      = 0
 			enemy.plating    = 0
+			enemy.gold_reward = 2
 
 		Enemy.EnemyType.NORMIE:
 			enemy.max_hp     = int(10 * hp_mult)
@@ -397,6 +398,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.size       = 1.0
 			enemy.armor      = 0
 			enemy.plating    = 0
+			enemy.gold_reward = 1
 
 		Enemy.EnemyType.WARRIOR:
 			enemy.max_hp     = int(30 * hp_mult)
@@ -406,6 +408,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.size       = 1.2
 			enemy.armor      = 30
 			enemy.plating    = 0
+			enemy.gold_reward = 3
 
 		Enemy.EnemyType.WIZARD:
 			enemy.max_hp     = int(15 * hp_mult)
@@ -415,6 +418,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.size       = 1.0
 			enemy.armor      = 0
 			enemy.plating    = int(3 * hp_mult)
+			enemy.gold_reward = 3
 
 		Enemy.EnemyType.BOSS:
 			enemy.max_hp     = int(100 * hp_mult)
@@ -424,6 +428,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.size       = 2.0
 			enemy.armor      = 50
 			enemy.plating    = 3
+			enemy.gold_reward = 20
 
 		Enemy.EnemyType.UBER_BOSS:
 			enemy.max_hp     = int(300 * hp_mult)
@@ -433,6 +438,7 @@ func _apply_stats(enemy: Enemy, type: Enemy.EnemyType, hp_mult: float, speed_mul
 			enemy.size       = 3.0
 			enemy.armor      = 100
 			enemy.plating    = int(5 * hp_mult)
+			enemy.gold_reward = 100
 
 
 # -------------------------
@@ -465,9 +471,11 @@ func _compute_speed_mult(wave_number: int) -> float:
 func _on_enemy_reached_base(damage: int) -> void:
 	if player_health != null:
 		player_health.take_damage(damage)
-	_on_enemy_removed()
+	_on_enemy_removed(0)
 
 
-func _on_enemy_removed() -> void:
+func _on_enemy_removed(gold_reward: int = 0) -> void:
 	_enemies_remaining = maxi(0, _enemies_remaining - 1)
 	enemies_remaining_changed.emit(_enemies_remaining)
+	if gold_reward > 0 and player_health != null:
+		player_health.add_gold(gold_reward)

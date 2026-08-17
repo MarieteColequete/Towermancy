@@ -12,23 +12,30 @@ enum TargetMode { FIRST, LAST, MOST_HP, LEAST_HP, CLOSEST, FARTHEST }
 @export var _stats_scaling: TowerStats
 @export var target_mode: TargetMode = TargetMode.CLOSEST
 
+# Icon texture shown in the shop and on the placement cursor.
+@export var icon: Texture2D
+
 var _current_target: Node2D = null
 
 
-# Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	pass # Replace with function body.
+	pass
 
-# Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
 	_update_target()
 
 
-#> TARGETING
-# Scans every enemy inside the tower's optics radius and picks the ideal one
-# based on target_mode. If the chosen mode doesn't resolve to a target
-# (e.g. FIRST / LAST, whose logic lives elsewhere), falls back to the first
-# enemy found in range as a safeguard.
+# -------------------------
+# Level
+# -------------------------
+
+func set_level(level: int) -> void:
+	_level = level
+
+
+# -------------------------
+# Targeting
+# -------------------------
 
 func get_current_target() -> Node2D:
 	return _current_target
@@ -89,8 +96,9 @@ func _get_distance_extreme(enemies: Array, closest: bool) -> Node2D:
 	return picked
 
 
-#> GETTERS & SETTERS
-# get() and set() functions
+# -------------------------
+# Getters
+# -------------------------
 
 func get_mods() -> Array[TowerMod]:
 	return _mods

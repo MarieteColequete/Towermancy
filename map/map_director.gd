@@ -3,10 +3,15 @@ extends Node2D
 @export var world: WorldData
 @export var cells: TileMapLayer
 @export var wave_director: WaveDirector
-@export var game_ui: CanvasLayer
+@export var game_ui: GameUI
+@export var tower_shop: TowerShop
+@export var tower_placer: TowerPlacer
 
 const TERRAIN_PATH: int = 1
 const TERRAIN_EMPTY: int = 0
+
+var _current_wave: int = 1
+var _expansion_per_wave: int = 1
 
 
 # -------------------------
@@ -18,7 +23,10 @@ func _ready() -> void:
 	_generate_map()
 	_sync_spawn_points()
 	game_ui.initialize()
-	wave_director.start_wave(15, false)
+	tower_shop.initialize(_current_wave)
+	game_ui.next_wave_pressed.connect(_on_next_wave_pressed)
+	# Connect wave completion to show the button again
+	wave_director.enemies_remaining_changed.connect(_on_enemies_remaining_changed)
 
 
 # -------------------------
@@ -27,7 +35,7 @@ func _ready() -> void:
 
 func _generate_map() -> void:
 	_place_origin()
-	_expand_all(20)
+	_expand_all(100)
 
 
 # Public: expand map further and refresh spawn points
@@ -116,6 +124,40 @@ func world_to_chunk(world_pos: Vector2) -> Vector2i:
 		floori(float(cell.x) / Constants.CHUNK_SIZE.x),
 		floori(float(cell.y) / Constants.CHUNK_SIZE.y)
 	)
+
+
+# -------------------------
+# Wave tracking
+# -------------------------
+
+func get_current_wave() -> int:
+	return _current_wave
+
+# -------------------------
+# Wave flow
+# -------------------------
+
+func _on_next_wave_pressed() -> void:
+	_current_wave += 1
+	for i in range(_expansion_per_wave):
+		if world.has_ghosts():
+			_expand_step()
+	_render_pending_empty_chunks()
+	_sync_spawn_points()
+	advance_wave(_current_wave)
+
+
+func _on_enemies_remaining_changed(count: int) -> void:
+	if count == 0:
+		tower_shop.refresh_wave(_current_wave)
+		game_ui.show_next_wave_button()
+
+
+# Call this when advancing waves so the shop updates tower levels.
+func advance_wave(wave_number: int) -> void:
+	_current_wave = wave_number
+	wave_director.start_wave(wave_number)
+	game_ui.set_wave(wave_number)
 
 
 # -------------------------

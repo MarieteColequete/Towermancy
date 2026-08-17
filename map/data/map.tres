@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="WorldData" load_steps=5 format=3 uid="uid://ccwuyitlsjl8d"]
+
+[ext_resource type="Script" uid="uid://c1c3skgm6m735" path="res://map/data/world_data.gd" id="1_iqhn7"]
+[ext_resource type="FastNoiseLite" uid="uid://7c63pdy2srlt" path="res://map/mountain/m_noise.tres" id="2_703mm"]
+[ext_resource type="Script" uid="uid://dobklat6w58d2" path="res://map/mountain/terrain_generator.gd" id="3_0rwo4"]
+
+[sub_resource type="Resource" id="Resource_112ik"]
+script = ExtResource("3_0rwo4")
+noise = ExtResource("2_703mm")
+metadata/_custom_type_script = "uid://dobklat6w58d2"
+
+[resource]
+script = ExtResource("1_iqhn7")
+terrain = SubResource("Resource_112ik")
+metadata/_custom_type_script = "uid://c1c3skgm6m735"
